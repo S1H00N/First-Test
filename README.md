@@ -32,6 +32,23 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
+## Vercel 배포 연동
+
+이 프로젝트는 `vercel.json`이 포함되어 있어 Vercel에서 바로 빌드/배포할 수 있습니다.
+
+1. Vercel 대시보드에서 **Add New Project**를 선택합니다.
+2. GitHub 저장소 `L2D-Life-to-Display/First-Test`를 Import 합니다.
+3. Framework Preset은 자동 감지(`Vite`)를 사용합니다.
+4. Environment Variables에 아래 값을 추가합니다.
+
+```text
+VITE_API_BASE_URL=http://flowra.xenon54.co.kr/api/v1
+```
+
+5. Deploy를 실행합니다.
+
+배포 후 React Router 경로(`/auth/login`, `/home` 등) 직접 접근은 `vercel.json`의 SPA rewrite 설정으로 처리됩니다.
+
 ## 현재 포함된 구성
 
 - Axios 기반 공통 HTTP 클라이언트
