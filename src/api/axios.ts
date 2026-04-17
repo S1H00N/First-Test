@@ -5,6 +5,7 @@ import axios, {
 } from 'axios'
 
 import { notifyAuthFailure } from '../auth/authEvents'
+import { API_BASE_URL as ENV_API_BASE_URL } from '../config/env'
 import {
   clearAuthTokens,
   getAccessToken,
@@ -12,7 +13,7 @@ import {
   setAuthTokens,
 } from '../lib/tokenStorage'
 
-export const API_BASE_URL = 'http://flowra.xenon54.co.kr/api/v1'
+export const API_BASE_URL = ENV_API_BASE_URL
 
 interface ApiSuccessResponse<T> {
   success: boolean

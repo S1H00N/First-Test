@@ -44,7 +44,7 @@
 브라우저 DevTools Console에서 실행:
 
 ```javascript
-await fetch('http://flowra.xenon54.co.kr/api/v1/auth/signup', {
+await fetch('https://flowra.xenon54.co.kr/api/v1/auth/signup', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({

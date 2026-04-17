@@ -3,8 +3,8 @@
 Flowra 졸업작품 프론트엔드 작업용 시작 프로젝트입니다.
 
 - API 기준 문서: `flowra_api_spec_p_0.md`
-- 백엔드 연동 주소: `http://flowra.xenon54.co.kr/`
-- 기본 API Base URL: `http://flowra.xenon54.co.kr/api/v1`
+- 백엔드 연동 주소: `https://flowra.xenon54.co.kr/`
+- 기본 API Base URL: `https://flowra.xenon54.co.kr/api/v1`
 
 ## 시작하기
 
@@ -42,7 +42,7 @@ npm run dev
 4. Environment Variables에 아래 값을 추가합니다.
 
 ```text
-VITE_API_BASE_URL=http://flowra.xenon54.co.kr/api/v1
+VITE_API_BASE_URL=https://flowra.xenon54.co.kr/api/v1
 ```
 
 5. Deploy를 실행합니다.
