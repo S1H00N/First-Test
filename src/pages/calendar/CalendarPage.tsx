@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import {
   schedulesApi,
@@ -31,6 +32,28 @@ const initialScheduleForm: ScheduleFormState = {
   all_day: false,
   location: '',
   visibility: 'private',
+}
+
+const scheduleViewValues: ScheduleView[] = ['month', 'week', 'day', 'list']
+
+const normalizeScheduleView = (value: string | null): ScheduleView => {
+  if (!value) {
+    return 'month'
+  }
+
+  if (scheduleViewValues.includes(value as ScheduleView)) {
+    return value as ScheduleView
+  }
+
+  return 'month'
+}
+
+const normalizeDateFilter = (value: string | null): string => {
+  if (!value) {
+    return ''
+  }
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : ''
 }
 
 const toIsoDateTime = (localDateTime: string): string | undefined => {
@@ -66,8 +89,14 @@ const toDateTimeLocalValue = (isoDateTime: string | null): string => {
 
 export function CalendarPage() {
   const { handleApiError } = useApiError()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [view, setView] = useState<ScheduleView>('month')
+  const [view, setView] = useState<ScheduleView>(() =>
+    normalizeScheduleView(searchParams.get('view')),
+  )
+  const [startDateFilter, setStartDateFilter] = useState<string>(() =>
+    normalizeDateFilter(searchParams.get('start_date')),
+  )
   const [page, setPage] = useState<number>(1)
   const [size, setSize] = useState<number>(20)
 
@@ -89,6 +118,7 @@ export function CalendarPage() {
         page,
         size,
         view,
+        start_date: startDateFilter || undefined,
       })
 
       setSchedules(response.items)
@@ -104,7 +134,23 @@ export function CalendarPage() {
     } finally {
       setLoading(false)
     }
-  }, [handleApiError, page, size, view])
+  }, [handleApiError, page, size, startDateFilter, view])
+
+  const applyCalendarQuery = useCallback(
+    (nextView: ScheduleView, nextStartDate: string): void => {
+      const params = new URLSearchParams(searchParams)
+      params.set('view', nextView)
+
+      if (nextStartDate) {
+        params.set('start_date', nextStartDate)
+      } else {
+        params.delete('start_date')
+      }
+
+      setSearchParams(params, { replace: true })
+    },
+    [searchParams, setSearchParams],
+  )
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
@@ -225,13 +271,30 @@ export function CalendarPage() {
             view
             <select
               value={view}
-              onChange={(event) => setView(event.target.value as ScheduleView)}
+              onChange={(event) => {
+                const nextView = event.target.value as ScheduleView
+                setView(nextView)
+                applyCalendarQuery(nextView, startDateFilter)
+              }}
             >
               <option value="month">month</option>
               <option value="week">week</option>
               <option value="day">day</option>
               <option value="list">list</option>
             </select>
+          </label>
+
+          <label>
+            start_date
+            <input
+              type="date"
+              value={startDateFilter}
+              onChange={(event) => {
+                const nextStartDate = normalizeDateFilter(event.target.value)
+                setStartDateFilter(nextStartDate)
+                applyCalendarQuery(view, nextStartDate)
+              }}
+            />
           </label>
 
           <label>
@@ -269,6 +332,10 @@ export function CalendarPage() {
           </button>
         </div>
         <p className="helper-text">{loading ? '요청 중...' : message}</p>
+        <p className="helper-text">
+          적용 필터: view={view}
+          {startDateFilter ? `, start_date=${startDateFilter}` : ''}
+        </p>
       </article>
 
       <section className="grid-2">

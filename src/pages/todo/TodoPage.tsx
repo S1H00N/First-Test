@@ -1,17 +1,48 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import { tasksApi } from '../../api'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
 import { useApiError } from '../../hooks/useApiError'
-import { TASK_STATUS } from '../../types/enum'
-import type { Task, TaskStatus } from '../../types/flowra'
+import { TASK_PRIORITY, TASK_STATUS } from '../../types/enum'
+import type { Task, TaskPriority, TaskStatus } from '../../types/flowra'
+
+const taskStatusValues = Object.values(TASK_STATUS) as TaskStatus[]
+const taskPriorityValues = Object.values(TASK_PRIORITY) as TaskPriority[]
+
+const normalizeCsvFilter = <T extends string>(
+  rawValue: string | null,
+  validValues: readonly T[],
+): string => {
+  if (!rawValue) {
+    return ''
+  }
+
+  const validSet = new Set(validValues)
+  const normalized = rawValue
+    .split(',')
+    .map((token) => token.trim())
+    .filter((token): token is T => validSet.has(token as T))
+
+  if (normalized.length === 0) {
+    return ''
+  }
+
+  return Array.from(new Set(normalized)).join(',')
+}
 
 export function TodoPage() {
   const { handleApiError } = useApiError()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [page, setPage] = useState<number>(1)
   const [size, setSize] = useState<number>(20)
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | ''>('')
+  const [statusFilter, setStatusFilter] = useState<string>(() =>
+    normalizeCsvFilter(searchParams.get('status'), taskStatusValues),
+  )
+  const [priorityFilter, setPriorityFilter] = useState<string>(() =>
+    normalizeCsvFilter(searchParams.get('priority'), taskPriorityValues),
+  )
 
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
@@ -28,6 +59,7 @@ export function TodoPage() {
         page,
         size,
         status: statusFilter || undefined,
+        priority: priorityFilter || undefined,
       })
 
       setTasks(response.items)
@@ -42,7 +74,28 @@ export function TodoPage() {
     } finally {
       setLoading(false)
     }
-  }, [handleApiError, page, size, statusFilter])
+  }, [handleApiError, page, priorityFilter, size, statusFilter])
+
+  const applyTodoQuery = useCallback(
+    (nextStatusFilter: string, nextPriorityFilter: string): void => {
+      const params = new URLSearchParams(searchParams)
+
+      if (nextStatusFilter) {
+        params.set('status', nextStatusFilter)
+      } else {
+        params.delete('status')
+      }
+
+      if (nextPriorityFilter) {
+        params.set('priority', nextPriorityFilter)
+      } else {
+        params.delete('priority')
+      }
+
+      setSearchParams(params, { replace: true })
+    },
+    [searchParams, setSearchParams],
+  )
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
@@ -141,14 +194,43 @@ export function TodoPage() {
             status
             <select
               value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter((event.target.value || '') as TaskStatus | '')
-              }
+              onChange={(event) => {
+                const nextStatusFilter = normalizeCsvFilter(
+                  event.target.value,
+                  taskStatusValues,
+                )
+                setStatusFilter(nextStatusFilter)
+                applyTodoQuery(nextStatusFilter, priorityFilter)
+              }}
             >
               <option value="">all</option>
+              <option value="todo,in_progress">todo,in_progress</option>
               {Object.values(TASK_STATUS).map((status) => (
                 <option key={status} value={status}>
                   {status}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            priority
+            <select
+              value={priorityFilter}
+              onChange={(event) => {
+                const nextPriorityFilter = normalizeCsvFilter(
+                  event.target.value,
+                  taskPriorityValues,
+                )
+                setPriorityFilter(nextPriorityFilter)
+                applyTodoQuery(statusFilter, nextPriorityFilter)
+              }}
+            >
+              <option value="">all</option>
+              <option value="urgent,high">urgent,high</option>
+              {Object.values(TASK_PRIORITY).map((priority) => (
+                <option key={priority} value={priority}>
+                  {priority}
                 </option>
               ))}
             </select>
@@ -159,6 +241,11 @@ export function TodoPage() {
           </button>
         </div>
         <p className="helper-text">{loading ? '요청 중...' : message}</p>
+        <p className="helper-text">
+          적용 필터: {statusFilter ? `status=${statusFilter}` : 'status=all'}
+          {' / '}
+          {priorityFilter ? `priority=${priorityFilter}` : 'priority=all'}
+        </p>
       </article>
 
       <article className="panel">

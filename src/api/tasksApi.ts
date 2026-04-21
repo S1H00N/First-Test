@@ -11,8 +11,8 @@ import type {
 export type TaskSortField = 'created_at' | 'due_datetime' | 'priority'
 
 export interface TaskListQuery extends PageQuery {
-  status?: TaskStatus
-  priority?: TaskPriority
+  status?: string
+  priority?: string
   due_from?: string
   due_to?: string
   category_id?: number
