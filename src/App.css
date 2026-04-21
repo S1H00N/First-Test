@@ -128,6 +128,66 @@ button.app-nav-link {
   font-size: 13px;
 }
 
+.filter-badge-row {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid #b7ccbe;
+  background: #f1f8f0;
+  color: #2f5a52;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 7px 10px;
+}
+
+.panel .filter-badge-remove {
+  all: unset;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #d8e8d8;
+  color: #2f5a52;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.panel .filter-badge-remove:hover {
+  background: #c5ddc8;
+}
+
+.panel .filter-badge-remove:focus-visible {
+  outline: 2px solid #2f7a6d;
+  outline-offset: 1px;
+}
+
+.panel .filter-reset-button {
+  border-radius: 999px;
+  border: 1px solid #b8c9b8;
+  background: #f6faf2;
+  color: #35594f;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.panel .filter-reset-button:hover {
+  background: #ecf4e8;
+}
+
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

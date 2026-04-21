@@ -36,6 +36,13 @@ const initialScheduleForm: ScheduleFormState = {
 
 const scheduleViewValues: ScheduleView[] = ['month', 'week', 'day', 'list']
 
+const calendarViewLabelMap: Record<ScheduleView, string> = {
+  month: '월간 뷰',
+  week: '주간 뷰',
+  day: '일간 뷰',
+  list: '리스트 뷰',
+}
+
 const normalizeScheduleView = (value: string | null): ScheduleView => {
   if (!value) {
     return 'month'
@@ -91,12 +98,11 @@ export function CalendarPage() {
   const { handleApiError } = useApiError()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const [view, setView] = useState<ScheduleView>(() =>
-    normalizeScheduleView(searchParams.get('view')),
-  )
-  const [startDateFilter, setStartDateFilter] = useState<string>(() =>
-    normalizeDateFilter(searchParams.get('start_date')),
-  )
+  const view = normalizeScheduleView(searchParams.get('view'))
+  const startDateFilter = normalizeDateFilter(searchParams.get('start_date'))
+  const hasViewFilter = searchParams.has('view')
+  const hasStartDateFilter = Boolean(startDateFilter)
+
   const [page, setPage] = useState<number>(1)
   const [size, setSize] = useState<number>(20)
 
@@ -139,7 +145,12 @@ export function CalendarPage() {
   const applyCalendarQuery = useCallback(
     (nextView: ScheduleView, nextStartDate: string): void => {
       const params = new URLSearchParams(searchParams)
-      params.set('view', nextView)
+
+      if (nextView === 'month') {
+        params.delete('view')
+      } else {
+        params.set('view', nextView)
+      }
 
       if (nextStartDate) {
         params.set('start_date', nextStartDate)
@@ -148,9 +159,18 @@ export function CalendarPage() {
       }
 
       setSearchParams(params, { replace: true })
+      setPage(1)
     },
     [searchParams, setSearchParams],
   )
+
+  const resetCalendarFilters = (): void => {
+    const params = new URLSearchParams(searchParams)
+    params.delete('view')
+    params.delete('start_date')
+    setSearchParams(params, { replace: true })
+    setPage(1)
+  }
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
@@ -273,7 +293,6 @@ export function CalendarPage() {
               value={view}
               onChange={(event) => {
                 const nextView = event.target.value as ScheduleView
-                setView(nextView)
                 applyCalendarQuery(nextView, startDateFilter)
               }}
             >
@@ -291,7 +310,6 @@ export function CalendarPage() {
               value={startDateFilter}
               onChange={(event) => {
                 const nextStartDate = normalizeDateFilter(event.target.value)
-                setStartDateFilter(nextStartDate)
                 applyCalendarQuery(view, nextStartDate)
               }}
             />
@@ -331,6 +349,25 @@ export function CalendarPage() {
             GET /schedules
           </button>
         </div>
+
+        {(hasStartDateFilter || hasViewFilter) ? (
+          <div className="filter-badge-row" aria-label="활성 캘린더 필터">
+            {hasStartDateFilter ? (
+              <span className="filter-badge">날짜: {startDateFilter}</span>
+            ) : null}
+            {hasViewFilter ? (
+              <span className="filter-badge">{calendarViewLabelMap[view]}</span>
+            ) : null}
+            <button
+              type="button"
+              className="filter-reset-button"
+              onClick={resetCalendarFilters}
+            >
+              필터 초기화
+            </button>
+          </div>
+        ) : null}
+
         <p className="helper-text">{loading ? '요청 중...' : message}</p>
         <p className="helper-text">
           적용 필터: view={view}
